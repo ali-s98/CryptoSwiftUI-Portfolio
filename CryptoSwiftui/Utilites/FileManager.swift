@@ -1,0 +1,78 @@
+//
+//  FileManager.swift
+//  CryptoSwiftui
+//
+//  Created by ali sadeghi on 01/08/1402 AP.
+//
+
+import Foundation
+
+
+class LocalFileManager{
+    
+    
+    static let sheard = LocalFileManager()
+    private init(){}
+    
+    
+    func saveImage(imageData: Data?, imageName: String,folderName: String){
+        
+        createFolderIfNeeded(folderName: folderName)
+        
+        guard
+            let imageData = imageData,
+            let url = getURLForImage(imageName: imageName, folderName: folderName)
+        else{return}
+        
+        do{
+            try imageData.write(to: url)
+        }catch let error{
+            print("Error saving image. imageName\(imageName) \(error)")
+        }
+    }
+    
+    func getImage(imageName: String, folderName: String)-> Data? {
+        guard
+            let url = getURLForImage(imageName: imageName, folderName: folderName),
+            FileManager.default.fileExists(atPath: url.path)
+        else{return nil}
+        
+        return try? Data(contentsOf: url)
+    }
+    
+    
+    private func createFolderIfNeeded(folderName: String){
+        guard let url = getURLForFolder(folderName: folderName) else{
+            return
+        }
+        
+        if !FileManager.default.fileExists(atPath: url.path){
+            do {
+                 try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+            } catch let error {
+                print("Error creating directory. folderName: \(folderName) \(error)")
+            }
+        }
+        
+    }
+    
+    
+    private func getURLForFolder(folderName: String)-> URL?{
+        guard let url = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else{
+            return nil
+        }
+        
+        return url.appendingPathExtension(folderName)
+    }
+    
+    private func getURLForImage(imageName: String, folderName: String)-> URL?{
+        guard let folderURL = getURLForFolder(folderName: folderName) else{
+            return nil
+        }
+        
+        return folderURL.appendingPathComponent(imageName + ".png")
+    }
+    
+    
+    
+}
